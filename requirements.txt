@@ -1,1 +1,2 @@
 flask
+bitget-python-sdk
