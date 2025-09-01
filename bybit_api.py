@@ -1,31 +1,27 @@
-import os
-from pybit.unified_trading import HTTP
+from flask import Flask, request, jsonify
+from bybit_api import place_order
 
-# Charger les clés API depuis les variables d'environnement
-API_KEY = os.getenv("BYBIT_API_KEY")
-API_SECRET = os.getenv("BYBIT_API_SECRET")
+app = Flask(__name__)
 
-# Initialiser le client Bybit (Unified Trading)
-session = HTTP(
-    api_key=API_KEY,
-    api_secret=API_SECRET,
-)
+@app.route('/', methods=['GET'])
+def home():
+    return "Bot Bybit OK ✅"
 
-def place_order(symbol, action, price):
-    try:
-        side = "Buy" if action.lower() == "buy" else "Sell"
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.json
+    print("📩 Alerte reçue:", data)
 
-        print(f"📤 Envoi ordre {side} sur {symbol} à {price}")
+    action = data.get("action")
+    symbol = data.get("symbol")
+    price = data.get("price")
 
-        response = session.place_order(
-            category="linear",          # Pour USDT Perpetual
-            symbol=symbol,
-            side=side,
-            order_type="Market",
-            qty=0.01,                   # ⚠️ À adapter selon ton capital
-            time_in_force="GoodTillCancel"
-        )
+    if not all([action, symbol, price]):
+        return jsonify({"error": "Champs manquants"}), 400
 
-        print("✅ Réponse Bybit:", response)
-    except Exception as e:
-        print("❌ Erreur Bybit:", e)
+    place_order(symbol, action, price)
+
+    return jsonify({"status": "ordre envoyé"}), 200
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
