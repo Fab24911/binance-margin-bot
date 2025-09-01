@@ -1,2 +1,3 @@
-flask
-bitget-python-sdk
+Flask
+pybit
+
